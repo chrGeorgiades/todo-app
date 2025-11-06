@@ -7,7 +7,7 @@ from note import Note
 
 save_directory = './save/'
 
-DEBUG = True
+DEBUG = False
 
 
 class Binder:
@@ -23,15 +23,39 @@ class Binder:
         print('Binder', self.name, 'created')
 
 
-    def from_dict(self, data, notes):
-        self.name=data.get('name')
-        self.completed=bool(data.get('completed'))
-        self.filter_mode = str(data.get('filter_mode'))
-        self.notes = notes
+    def from_dict(self, data):
 
-        print('self.name:', self.name)
-        print('notes:', self.notes)
-        print()
+        data_split = data.split('}\n')[:-1]
+
+        if DEBUG:
+            print('data:', data)
+            print('data split:', data_split)
+        
+        for i in range(len(data_split)):
+            if data_split[i]:
+                data_split[i] += '}'
+        
+        binder_data = data_split[0]
+        binder_json = json.loads(binder_data)
+        self.name=binder_json.get('name')
+        self.completed=bool(binder_json.get('completed'))
+        self.filter_mode = str(binder_json.get('filter_mode'))
+
+        notes_data = data_split[1:]
+        if DEBUG:
+            print('notes_data:', notes_data)
+        
+        for note_data in notes_data:
+            note = Note()
+            note.from_dict(note_data)
+            self.notes.append(note)
+
+        if DEBUG:
+            print('self.name:', self.name)
+            print('notes:', self.notes)
+            print()
+
+        print('Loaded binder:', self.name)
 
 
     def to_dict(self):

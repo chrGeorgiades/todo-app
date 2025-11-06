@@ -1,10 +1,10 @@
 import os
 import json
+from datetime import datetime
 
 import curses
 
-from datetime import datetime
-# import serialization
+DEBUG = False
 
 class Note:
     def __init__(self, name = 'note1', description="", priority="medium", completed=False):
@@ -13,12 +13,14 @@ class Note:
         self.priority = priority  # "low", "medium", "high"
         self.completed = False
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M")
-        
-        print('Note written')
     
 
     def from_dict(self, data):
-        self.name=data.get('name'),
+        if DEBUG:
+            print('data:', data)
+        
+        data = json.loads(data)
+        self.name=data.get('name')
         self.description=data.get('description')
         self.priority = data.get('priority')
         self.completed = data.get('completed')
