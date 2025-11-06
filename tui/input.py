@@ -1,6 +1,5 @@
 import curses
 
-import tui.dialog as Dialog
 
 class Input():
     def __init__(self, tui, renderer):

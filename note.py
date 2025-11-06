@@ -6,6 +6,7 @@ import curses
 
 DEBUG = False
 
+
 class Note:
     def __init__(self, name = 'note1', description="", priority="medium", completed=False):
         self.name = name

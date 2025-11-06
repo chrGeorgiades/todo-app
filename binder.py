@@ -5,7 +5,10 @@ from pathlib import Path
 
 from note import Note
 
-save_directory = './save/'
+script_dir = Path(__file__).parent.absolute()
+# print('script_dir', script_dir)
+
+save_directory = str(script_dir) + '/save/'
 
 DEBUG = False
 

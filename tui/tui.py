@@ -8,7 +8,6 @@ from pathlib import Path
 from binder import Binder
 from note import Note
 
-import serialization
 
 class TUI:
     def __init__(self, binder = None):
@@ -22,7 +21,6 @@ class TUI:
 
 
     def quit(self):
-        # serialization.save_binder(self.binder)
         self.running = False
 
 

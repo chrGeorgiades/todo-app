@@ -7,7 +7,12 @@ from note import Note
 
 DEBUG = False
 
-save_directory = './save/'
+from pathlib import Path
+
+script_dir = Path(__file__).parent.absolute()
+# print('script_dir', script_dir)
+
+save_directory = str(script_dir) + '/save/'
 
 
 def save_binder(binder):
@@ -33,6 +38,7 @@ def save_binders(binders):
 
     for binder in binders:
         save_binder(binder)
+
 
 ############
 

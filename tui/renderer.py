@@ -1,5 +1,6 @@
 import curses
 
+
 class Renderer():
     def __init__(self, binder):
         self.binder = binder
