@@ -16,18 +16,15 @@ DEBUG = False
 class Binder:
     filter_mode = "all"  # "all", "pending", "completed"
 
-    def __init__(self, name = 'binder1', completed = False, notes=[]):
+    def __init__(self, name = 'binder1', completed = False):
         self.name = name
         self.completed = completed
-        self.notes = notes
-
-        self.binder_directory = save_directory + self.name + '/'
+        self.notes = []
 
         print('Binder', self.name, 'created')
 
 
     def from_dict(self, data):
-
         data_split = data.split('}\n')[:-1]
 
         if DEBUG:
@@ -62,7 +59,7 @@ class Binder:
 
 
     def to_dict(self):
-        """Convert Note object to dictionary for serialization"""
+        # Convert Note object to dictionary for serialization"""
         return {
             'name': self.name,
             'completed': self.completed,
@@ -70,36 +67,19 @@ class Binder:
         }
 
 
-    def load_notes(self):
-        """Load notes from JSON file"""
-        try:
-            if self.data_file.exists():
-                with open(self.data_file, 'r') as f:
-                    self.notes = json.load(f)
-        except Exception as e:
-            self.notes = []
+    def get_filtered_notes(self):
+        return self.notes
+        # """Get notes based on current filter"""
+        # if self.filter_mode == "pending":
+        #     return [todo for todo in self.notes if not todo["completed"]]
+        # elif self.filter_mode == "completed":
+        #     return [todo for todo in self.notes if todo["completed"]]
+        # return self.notes
 
 
-    # def save_notes(self):
-    #     if not os.path.exists(self.directory):
-    #         os.mkdir(self.directory)
-
-    #     for note in self.notes:
-    #         note.save(self.directory)
-
-    #     print('Saved Binder to:', self.directory)
-
-
-    def add_todo(self, name='', description='', priority="medium"):
-        new_note = Note(name=name, description=description, priority=priority,)
+    def add_note(self, name='', description='', priority="medium"):
+        new_note = Note(name=name, description=description, priority=priority)
         self.notes.append(new_note)
-
-
-    def toggle_todo(self, index):
-        """Toggle completion status of a todo"""
-        if 0 <= index < len(self.notes):
-            self.notes[index]["completed"] = not self.notes[index]["completed"]
-            # self.save_notes()
 
 
     def delete_note(self, index):
@@ -108,17 +88,16 @@ class Binder:
             # if self.current_selection >= len(self.notes) and self.notes:
             #     self.current_selection = len(self.notes) - 1
             
-            note.delete(self.binder_directory)
+            # note.delete(self.binder_directory)
             del note
 
 
-    def get_filtered_notes(self):
-        """Get notes based on current filter"""
-        if self.filter_mode == "pending":
-            return [todo for todo in self.notes if not todo["completed"]]
-        elif self.filter_mode == "completed":
-            return [todo for todo in self.notes if todo["completed"]]
-        return self.notes
+    def delete(self):
+        savefile = save_directory+str(self.name) + '.binder'
+        print('Savefile to be deleted:', savefile)
+        if os.path.exists(savefile):
+            os.remove(savefile)
+            print("File", savefile, "deleted successfully.")
 
 
     def __str__(self):

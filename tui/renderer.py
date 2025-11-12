@@ -2,9 +2,12 @@ import curses
 
 
 class Renderer():
-    def __init__(self, binder):
-        self.binder = binder
+    def __init__(self, tui):
+        self.tui = tui
+        
         self.cursor_height = 0
+        self.cursor_width = 0
+        
         self.stdscr = None
 
         self.current_selection = 0
@@ -13,27 +16,45 @@ class Renderer():
     def write_line(self, text, middle_align=False, right_align=False, use_bold=False, increment_cursor=True):
         height, width = self.stdscr.getmaxyx()
         
-        cursor_width = 0
+        # self.cursor_width = 0
         if middle_align:
-            cursor_width = (width - len(text)) // 2
+            self.cursor_width = (width - len(text)) // 2
         elif right_align:
-            cursor_width = (width - len(text))
+            self.cursor_width = (width - len(text))
 
         if use_bold:
-            self.stdscr.addstr(self.cursor_height, cursor_width, text, curses.A_BOLD)
+            self.stdscr.addstr(self.cursor_height, self.cursor_width, text, curses.A_BOLD)
         else:
             # self.cursor_height = 0
             print('Cursor Height:', self.cursor_height)
             print('Text:', text)
-            self.stdscr.addstr(self.cursor_height, cursor_width, text)
+            self.stdscr.addstr(self.cursor_height, self.cursor_width, text)
 
         if increment_cursor:
             self.cursor_height += 1
+            self.cursor_width = 0
+        else:
+            self.cursor_width += len(text)
 
 
-    def draw_binder(self):
-        self.write_line(self.binder.name + ' | ')
-        self.write_line((len(self.binder.name) + 3) * '-')
+    def draw_binder_header(self):
+        # self.write_line(self.tui.open_binder.name)
+
+        for binder in self.tui.binders:
+            if binder == self.tui.open_binder:
+                self.write_line(binder.name + ' | ', increment_cursor=False, use_bold=True)
+            else:
+                self.write_line(binder.name + ' | ', increment_cursor=False)
+        
+        self.write_line('')
+
+        for binder in self.tui.binders:
+            if binder == self.tui.open_binder:
+                self.write_line((len(binder.name) + 3) * '-', increment_cursor=False, use_bold=True)
+            else:
+                self.write_line((len(binder.name) + 3) * '-', increment_cursor=False)
+        
+        self.write_line('')
 
 
     # def draw stat
@@ -55,8 +76,8 @@ class Renderer():
     #     # self.stdscr.addstr(1, 2, filter_text, curses.A_UNDERLINE)
         
         # Statistics
-        total = len(self.binder.notes)
-        completed = len([t for t in self.binder.notes if t.completed])
+        total = len(self.tui.open_binder.notes)
+        completed = len([t for t in self.tui.open_binder.notes if t.completed])
         stats_text = f"Tasks: {total} | Completed: {completed} | Pending: {total - completed}"
         #self.stdscr.addstr(self.cursor_height, width - len(stats_text) - 2, stats_text)
         self.write_line(stats_text, right_align=True)
@@ -72,15 +93,15 @@ class Renderer():
         #self.cursor_height += 1
     #     self.cursor_height = self.cursor_height + 4
 
-        self.draw_binder()
+        self.draw_binder_header()
 
 
     def draw_todo_list(self):
         height, width = self.stdscr.getmaxyx()
-        #filtered_notes = self.binder.get_filtered_notes()
-        filtered_notes = self.binder.notes
+        #filtered_notes = self.open_binder.get_filtered_notes()
+        filtered_notes = self.tui.open_binder.notes
         
-        print('filtered_notes:\n', filtered_notes)
+        # print('filtered_notes:\n', filtered_notes)
 
         if not filtered_notes:
             no_tasks_msg = "No tasks found. Press 'a' to add a new task!"
@@ -88,6 +109,7 @@ class Renderer():
             self.write_line(no_tasks_msg, middle_align=True)
             return 
 
+        # self.write_line(self.tui.open_binder.name)
         for i, note in enumerate(filtered_notes):
             # if self.cursor_height > height:
             #     break
@@ -133,14 +155,6 @@ class Renderer():
     #     # Separator
     #     self.stdscr.addstr(height - 4, 0, "=" * width, curses.A_BOLD)
         
-        # # Help text
-        # help_items = [
-        #     ("a", "Add Task"),
-        #     ("d", "Delete Task"),
-        #     ("Space", "Toggle Complete"),
-        #     ("f", "Change Filter"),
-        #     ("q", "Quit")
-        # ]
         
         # help_text = " | ".join([f"{key}: {desc}" for key, desc in help_items])
         # if len(help_text) < width:
@@ -148,7 +162,6 @@ class Renderer():
 
 
     def draw_help_text(self):
-
         height, width = self.stdscr.getmaxyx()
 
         # Help text
@@ -157,6 +170,8 @@ class Renderer():
             ("d", "Delete Task"),
             ("Space", "Toggle Complete"),
             ("f", "Change Filter"),
+            ("b", "Add Binder"),
+            ("m", "Delete Binder"),
             ("q", "Quit")
         ]
         
@@ -167,7 +182,7 @@ class Renderer():
             #self.stdscr.addstr(self.cursor_height, (width - len(help_text)) // 2, help_text, curses.A_DIM) 
 
 
-    def show_add_todo_dialog(self, stdscr):
+    def show_add_note_dialog(self, stdscr):
         """Show dialog to add new todo"""
         height, width = stdscr.getmaxyx()
         
@@ -180,7 +195,7 @@ class Renderer():
         # Draw dialog box
         dialog_win = curses.newwin(dialog_height, dialog_width, start_y, start_x)
         dialog_win.box()
-        dialog_win.addstr(1, 2, "Add new Note", curses.A_BOLD)
+        dialog_win.addstr(1, 2, "Add new Note - " + self.tui.open_binder.name, curses.A_BOLD)
         # self.write_line('Add new Note', use_bold=True)
         dialog_win.addstr(2, 2, "Name:")
         dialog_win.refresh()
@@ -214,4 +229,58 @@ class Renderer():
             priority_map = {ord('h'): 'high', ord('l'): 'low', ord('m'): 'medium'}
             priority = priority_map.get(priority_key, 'medium')
             
-            self.binder.add_todo(name.strip(), description.strip(), priority)
+            self.tui.open_binder.add_note(name.strip(), description.strip(), priority)
+
+
+    def show_add_binder_dialog(self, stdscr):
+        """Show dialog to add new todo"""
+        height, width = stdscr.getmaxyx()
+        
+        # Create a border for the dialog
+        dialog_height = 8
+        dialog_width = 60
+        start_y = (height - dialog_height) // 2
+        start_x = (width - dialog_width) // 2
+        
+        # Draw dialog box
+        dialog_win = curses.newwin(dialog_height, dialog_width, start_y, start_x)
+        dialog_win.box()
+        dialog_win.addstr(1, 2, "Add new open_binder", curses.A_BOLD)
+        # self.write_line('Add new Note', use_bold=True)
+        dialog_win.addstr(2, 2, "Name:")
+        dialog_win.refresh()
+
+        # name = dialog_win.getstr().decode('utf-8')
+        
+        
+        curses.echo()
+        dialog_win.addstr(3, 2, " " * (dialog_width - 4))
+        dialog_win.addstr(3, 2, "")
+        name = dialog_win.getstr().decode('utf-8')
+        curses.noecho()
+        
+
+        # dialog_win.addstr(4, 2, "Description: ")
+
+
+        # # Get description
+        # curses.echo()
+        # dialog_win.addstr(5, 2, " " * (dialog_width - 4))
+        # dialog_win.addstr(5, 2, "")
+        # description = dialog_win.getstr().decode('utf-8')
+        # curses.noecho()
+        name_strip = name.strip()
+        if name_strip:
+            for binder in self.tui.Binders:
+                if name_strip == binder.name:
+                    return
+            # Priority selection
+            # dialog_win.addstr(6, 2, "Priority (h)igh/(m)edium/(l)ow [m]: ")
+            # dialog_win.refresh()
+            # priority_key = dialog_win.getch()
+            
+            # priority_map = {ord('h'): 'high', ord('l'): 'low', ord('m'): 'medium'}
+            # priority = priority_map.get(priority_key, 'medium')
+            
+            # self.open_binder.add_todo(name.strip(), description.strip(), priority)
+            self.tui.add_binder(name.strip())

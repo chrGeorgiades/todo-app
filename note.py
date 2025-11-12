@@ -43,16 +43,6 @@ class Note:
         self.completed = not self.completed
 
 
-    def delete(self, binder_directory):
-        savefile = binder_directory+str(self.name) + '.note'
-        print('Savefile to be deleted:', savefile)
-        if os.path.exists(savefile):
-            os.remove(savefile)
-            print("File", savefile, "deleted successfully.")
-
-        # del self
-
-
     def __str__(self):
         # Completion status
         status = "✓" if self.completed else "○"

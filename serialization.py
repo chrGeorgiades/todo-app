@@ -5,14 +5,16 @@ import glob
 from binder import Binder
 from note import Note
 
-DEBUG = False
+DEBUG = True
 
 from pathlib import Path
 
-script_dir = Path(__file__).parent.absolute()
-# print('script_dir', script_dir)
 
+script_dir = Path(__file__).parent.absolute()
 save_directory = str(script_dir) + '/save/'
+# print('save_directory', save_directory)
+
+
 
 
 def save_binder(binder):
@@ -56,6 +58,8 @@ def load_binder(binder_filepath):
     except Exception as e:
         print('Exception reading data:', e)
 
+    print('data:', data)
+
     binder = Binder()
     binder.from_dict(data)
 
@@ -66,13 +70,18 @@ def load_binders():
     binders = []
 
     binder_file_pattern = os.path.join(save_directory, '*.binder')
-
     binders_filelist = glob.glob(binder_file_pattern, recursive=True)
 
     if DEBUG:
         print('binders_filelist:', binders_filelist)
 
     for binder_filepath in binders_filelist:
+        print('binder_filepath:', binder_filepath)
         binders.append(load_binder(binder_filepath))
+
+    print('\nLoaded Binders:')
+    for binder in binders:
+        print(binder)
+        print(binder.notes)
 
     return binders
