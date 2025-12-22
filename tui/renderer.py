@@ -13,28 +13,85 @@ class Renderer():
         self.current_selection = 0
 
 
-    def write_line(self, text, middle_align=False, right_align=False, use_bold=False, increment_cursor=True):
+    def write_line(self, text, middle_align=False, right_align=False, use_bold=False, increment_cursor=True, wrap=True):
         height, width = self.stdscr.getmaxyx()
         
         # self.cursor_width = 0
-        if middle_align:
-            self.cursor_width = (width - len(text)) // 2
-        elif right_align:
-            self.cursor_width = (width - len(text))
 
-        if use_bold:
-            self.stdscr.addstr(self.cursor_height, self.cursor_width, text, curses.A_BOLD)
+        if len(text) > width:
+            if wrap:
+                text_split = text.split(' ')
+                new_line = text_split[0]
+                new_text = ''
+
+                for word in text_split[1:]:
+                    if len(new_line + ' ' + word) < width:
+                        new_line = new_line + ' ' + word
+                    else:
+                        if middle_align:
+                            self.cursor_width = (width - len(new_line)) // 2
+                        elif right_align:
+                            self.cursor_width = (width - len(new_line))
+
+                        self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
+                        self.cursor_height += 1
+                        new_line = word
+                        # new_text = new_text + new_line + '\n'
+                        # if word != text_split[-1]:
+                        #     new_text = new_text + '\n'
+                        
+                        # new_line = word
+
+                if middle_align:
+                    self.cursor_width = (width - len(new_line)) // 2
+                elif right_align:
+                    self.cursor_width = (width - len(new_line))
+
+                self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
+                text = new_line
         else:
-            # self.cursor_height = 0
-            print('Cursor Height:', self.cursor_height)
-            print('Text:', text)
+            if middle_align:
+                self.cursor_width = (width - len(text)) // 2
+            elif right_align:
+                self.cursor_width = (width - len(text))
+
             self.stdscr.addstr(self.cursor_height, self.cursor_width, text)
+
 
         if increment_cursor:
             self.cursor_height += 1
             self.cursor_width = 0
         else:
             self.cursor_width += len(text)
+
+
+        #self.stdscr.addstr(self.cursor_height, self.cursor_width, text)
+        #self.cursor_height += 1
+        # self.cursor_height += 1
+        
+        
+
+        # if '\n' in text:
+        #     poly_line = text.split('\n')
+        #     self.stdscr.addstr(self.cursor_height, self.cursor_width, poly_line[0])
+        #     self.cursor_height += 1
+        #     self.stdscr.addstr(self.cursor_height, self.cursor_width, poly_line[1])
+
+        # poly_line = text.split('\n')
+        # for line in poly_line:
+        #     # print(line)
+            
+        #     if use_bold:
+        #         self.stdscr.addstr(self.cursor_height, self.cursor_width, line, curses.A_BOLD)
+        #     else:
+        #         # self.cursor_height = 0
+        #         # print('Cursor Height:', self.cursor_height)
+        #         # print('Text:', text)
+        #         self.stdscr.addstr(self.cursor_height, self.cursor_width, line)
+
+        #     self.cursor_height += 1
+
+
 
 
     def draw_binder_header(self):
@@ -176,10 +233,14 @@ class Renderer():
         ]
         
         help_text = " | ".join([f"{key}: {desc}" for key, desc in help_items])
-        print(help_text)
-        if len(help_text) < width:
-            self.write_line(help_text, middle_align = True)
-            #self.stdscr.addstr(self.cursor_height, (width - len(help_text)) // 2, help_text, curses.A_DIM) 
+        # print(help_text)
+        self.write_line(help_text, middle_align = True)
+        
+        # if len(help_text) < width:
+            
+        #     #self.stdscr.addstr(self.cursor_height, (width - len(help_text)) // 2, help_text, curses.A_DIM)
+        # else: 
+        #     self.write_line(help_text, middle_align = True)
 
 
     def show_add_note_dialog(self, stdscr):
