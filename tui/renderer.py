@@ -33,7 +33,11 @@ class Renderer():
                         elif right_align:
                             self.cursor_width = (width - len(new_line))
 
-                        self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
+                        # self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
+                        if use_bold:
+                            self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line, curses.A_BOLD)
+                        else:
+                            self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
                         self.cursor_height += 1
                         new_line = word
                         # new_text = new_text + new_line + '\n'
@@ -47,7 +51,11 @@ class Renderer():
                 elif right_align:
                     self.cursor_width = (width - len(new_line))
 
-                self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
+                # self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
+                if use_bold:
+                 self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line, curses.A_BOLD)
+                else:
+                    self.stdscr.addstr(self.cursor_height, self.cursor_width, new_line)
                 text = new_line
         else:
             if middle_align:
@@ -55,7 +63,10 @@ class Renderer():
             elif right_align:
                 self.cursor_width = (width - len(text))
 
-            self.stdscr.addstr(self.cursor_height, self.cursor_width, text)
+            if use_bold:
+                 self.stdscr.addstr(self.cursor_height, self.cursor_width, text, curses.A_BOLD)
+            else:
+                self.stdscr.addstr(self.cursor_height, self.cursor_width, text)
 
 
         if increment_cursor:
@@ -96,9 +107,10 @@ class Renderer():
 
     def draw_binder_header(self):
         # self.write_line(self.tui.open_binder.name)
+        # self.write_line(self.tui.open_binder.name)
 
         for binder in self.tui.binders:
-            if binder == self.tui.open_binder:
+            if binder.name == self.tui.open_binder.name:
                 self.write_line(binder.name + ' | ', increment_cursor=False, use_bold=True)
             else:
                 self.write_line(binder.name + ' | ', increment_cursor=False)
@@ -106,7 +118,7 @@ class Renderer():
         self.write_line('')
 
         for binder in self.tui.binders:
-            if binder == self.tui.open_binder:
+            if binder.name == self.tui.open_binder.name:
                 self.write_line((len(binder.name) + 3) * '-', increment_cursor=False, use_bold=True)
             else:
                 self.write_line((len(binder.name) + 3) * '-', increment_cursor=False)
@@ -332,7 +344,7 @@ class Renderer():
         # curses.noecho()
         name_strip = name.strip()
         if name_strip:
-            for binder in self.tui.Binders:
+            for binder in self.tui.binders:
                 if name_strip == binder.name:
                     return
             # Priority selection
